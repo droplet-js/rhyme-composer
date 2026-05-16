@@ -1,7 +1,9 @@
 import { defaultFontPresetId } from '../constants/childFonts'
 import type { PageBackground, SongBook, SongPage, TextBlock } from '../types/book'
 
-const STORAGE_KEY = 'lite_book:state:v1'
+const STORAGE_KEY = 'rhyme_composer:state:v1'
+/** 旧版应用 id；首次从新版存储读取，保存后删除以免重复占用。 */
+const STORAGE_KEY_LEGACY = 'lite_book:state:v1'
 const SCHEMA_VERSION = 1 as const
 
 export type BookAppState = {
@@ -86,7 +88,7 @@ function migratePage(raw: unknown): SongPage | null {
 
 function migrateBook(raw: unknown): SongBook | null {
   if (!isRecord(raw)) return null
-  const title = typeof raw.title === 'string' ? raw.title : '我的儿歌书'
+  const title = typeof raw.title === 'string' ? raw.title : '我的儿歌串编'
   const pagesIn = Array.isArray(raw.pages) ? raw.pages : []
   const pages = pagesIn
     .map(migratePage)
@@ -99,7 +101,9 @@ function migrateBook(raw: unknown): SongBook | null {
 export function loadBookAppState(fallback: BookAppState): BookAppState {
   if (typeof localStorage === 'undefined') return fallback
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw =
+      localStorage.getItem(STORAGE_KEY) ??
+      localStorage.getItem(STORAGE_KEY_LEGACY)
     if (!raw) return fallback
     const data = JSON.parse(raw) as unknown
     if (!isRecord(data) || data.v !== SCHEMA_VERSION) return fallback
@@ -128,7 +132,12 @@ export function saveBookAppState(state: BookAppState): void {
       selectedIndex: state.selectedIndex,
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
+    try {
+      localStorage.removeItem(STORAGE_KEY_LEGACY)
+    } catch {
+      /* ignore */
+    }
   } catch (e) {
-    console.warn('lite_book: 无法写入 localStorage（可能已满）', e)
+    console.warn('RhymeComposer: 无法写入 localStorage（可能已满）', e)
   }
 }

@@ -103,5 +103,5 @@ export async function exportSongbookPdf(
   }
 
   const safeName = book.title.replace(/[/\\?%*:|"<>]/g, '-').slice(0, 80)
-  doc.save(`${safeName || '儿歌书'}.pdf`)
+  doc.save(`${safeName || '儿歌串编'}.pdf`)
 }

@@ -82,8 +82,6 @@ function formatHalfLabel(book: SongBook, index: number): string {
 }
 
 export function BookPreviewModal({ open, onClose, book, layout }: Props) {
-  const slotH = pagePreviewHeightPx() * PREVIEW_SCALE
-
   const bookletSpreads = useMemo(() => {
     const n = book.pages.length
     if (n === 0) return []
@@ -176,11 +174,6 @@ export function BookPreviewModal({ open, onClose, book, layout }: Props) {
                     ) : (
                       <BlankHalf scale={PREVIEW_SCALE} />
                     )}
-                    <div
-                      className="book-preview-crease"
-                      style={{ height: slotH }}
-                      aria-hidden
-                    />
                     {sp.right ? (
                       <ScaledPage
                         book={book}

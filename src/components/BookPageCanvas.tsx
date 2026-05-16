@@ -272,7 +272,6 @@ export function BookPageCanvas({
         boxSizing: 'border-box',
         position: 'relative',
         overflow: 'hidden',
-        border: '1px solid #e8dfd0',
       }}
     >
       <div

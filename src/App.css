@@ -614,21 +614,6 @@
 
 .book-preview-blank-inner {
   background: #ffffff;
-  border: 1px solid #e8dfd0;
-}
-
-.book-preview-crease {
-  flex: 0 0 auto;
-  width: 4px;
-  margin: 0 2px;
-  align-self: flex-start;
-  border-radius: 2px;
-  background: linear-gradient(
-    90deg,
-    rgb(0 0 0 / 0.06),
-    rgb(0 0 0 / 0.14),
-    rgb(0 0 0 / 0.06)
-  );
 }
 
 .book-preview-fullpage-stage {

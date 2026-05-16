@@ -12,7 +12,7 @@ import {
   type LayoutAlignKind,
 } from './lib/blockLayout'
 import { exportBookDataZip, importBookDataZip, suggestedBundleZipName } from './lib/bookDataBundle'
-import { exportSongbookPdf } from './lib/exportSongbookPdf'
+import { exportSongbookPdf, type PdfLayoutMode } from './lib/exportSongbookPdf'
 import type {
   PageBackground,
   SongBook,
@@ -293,6 +293,7 @@ function App() {
   )
   const [exporting, setExporting] = useState(false)
   const [bookPreviewOpen, setBookPreviewOpen] = useState(false)
+  const [pdfLayoutMode, setPdfLayoutMode] = useState<PdfLayoutMode>('booklet')
   const [bundleBusy, setBundleBusy] = useState(false)
   const [bundleFeedback, setBundleFeedback] = useState<{
     kind: 'ok' | 'err'
@@ -347,11 +348,11 @@ function App() {
     if (!elements.some((e) => e != null)) return
     setExporting(true)
     try {
-      await exportSongbookPdf(book, elements)
+      await exportSongbookPdf(book, elements, { mode: pdfLayoutMode })
     } finally {
       setExporting(false)
     }
-  }, [book])
+  }, [book, pdfLayoutMode])
 
   const onBgImageFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]
@@ -495,13 +496,28 @@ function App() {
           >
             导入数据
           </button>            
+          <label className="field-inline tight pdf-layout-field">
+            <span className="field-label" title="预览与导出 PDF 共用此选项">
+              PDF 版式
+            </span>
+            <select
+              className="input select"
+              value={pdfLayoutMode}
+              onChange={(e) =>
+                setPdfLayoutMode(e.target.value as PdfLayoutMode)
+              }
+            >
+              <option value="booklet">对折装订（骑马钉）</option>
+              <option value="fullPage">普通 PDF（一页一纸）</option>
+            </select>
+          </label>
           <button
             type="button"
             className="btn ghost"
             onClick={() => setBookPreviewOpen(true)}
             disabled={book.pages.length === 0}
           >
-            折帖总览
+            打印预览
           </button>
           <button
             type="button"
@@ -610,8 +626,8 @@ function App() {
             ))}
           </ol>
           <p className="sidebar-hint">
-            用 ↑↓ 调整顺序；⧉ 复制当前页。顶栏「折帖总览」查看骑马钉打印顺序，与导出 PDF
-            一致。
+            用 ↑↓ 调整顺序；⧉ 复制当前页。顶栏选择 PDF
+            版式后，「打印预览」与导出 PDF 一致（骑马钉 或 逐页 A4）。
           </p>
         </aside>
 
@@ -1095,6 +1111,7 @@ function App() {
         open={bookPreviewOpen}
         onClose={() => setBookPreviewOpen(false)}
         book={book}
+        layout={pdfLayoutMode}
       />
     </div>
   )

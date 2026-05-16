@@ -4,6 +4,12 @@ export const HALF_A4_MM = {
   height: 210,
 } as const
 
+/** ISO A4 portrait — one logical page per PDF page in「普通 PDF」导出。 */
+export const A4_PORTRAIT_MM = {
+  width: 210,
+  height: 297,
+} as const
+
 export const A4_LANDSCAPE_MM = {
   width: 297,
   height: 210,

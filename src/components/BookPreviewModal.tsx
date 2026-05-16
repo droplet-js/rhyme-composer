@@ -1,16 +1,19 @@
 import { useEffect, useMemo } from 'react'
 import { BookPageCanvas } from './BookPageCanvas'
 import { PAGE_PREVIEW_WIDTH_PX, pagePreviewHeightPx } from '../constants/paper'
-import { bookletLandscapeIndexPairs } from '../lib/exportSongbookPdf'
+import { bookletLandscapeIndexPairs, type PdfLayoutMode } from '../lib/exportSongbookPdf'
 import type { SongBook, SongPage } from '../types/book'
 
 type Props = {
   open: boolean
   onClose: () => void
   book: SongBook
+  layout: PdfLayoutMode
 }
 
 const PREVIEW_SCALE = 0.38
+/** 普通 PDF 单页在总览里略放大，便于辨认。 */
+const PREVIEW_SCALE_FULL = 0.44
 
 function BlankHalf({ scale }: { scale: number }) {
   const w = PAGE_PREVIEW_WIDTH_PX
@@ -73,14 +76,15 @@ function formatHalfLabel(book: SongBook, index: number): string {
   const p = book.pages[index]
   const name = p.pageName.trim()
   const n = index + 1
-  if (name) return `编辑第 ${n} 页 · ${name.length > 10 ? `${name.slice(0, 10)}…` : name}`
+  if (name)
+    return `编辑第 ${n} 页 · ${name.length > 10 ? `${name.slice(0, 10)}…` : name}`
   return `编辑第 ${n} 页`
 }
 
-export function BookPreviewModal({ open, onClose, book }: Props) {
+export function BookPreviewModal({ open, onClose, book, layout }: Props) {
   const slotH = pagePreviewHeightPx() * PREVIEW_SCALE
 
-  const spreads = useMemo(() => {
+  const bookletSpreads = useMemo(() => {
     const n = book.pages.length
     if (n === 0) return []
     const pairs = bookletLandscapeIndexPairs(n)
@@ -115,6 +119,8 @@ export function BookPreviewModal({ open, onClose, book }: Props) {
 
   if (!open) return null
 
+  const isBooklet = layout === 'booklet'
+
   return (
     <div
       className="book-preview-backdrop"
@@ -131,12 +137,12 @@ export function BookPreviewModal({ open, onClose, book }: Props) {
         <header className="book-preview-header">
           <div>
             <h2 id="book-preview-title" className="book-preview-title">
-              折帖总览
+              打印预览
             </h2>
             <p className="book-preview-sub">
-              与导出 PDF 相同，为骑马钉折帖顺序：每张 A4
-              横版一页；按张纸「正面 → 背面」双面打印，对折装订后即得正确页序（不足 4
-              的倍数时会自动补白半页）。
+              {isBooklet
+                ? '当前为对折装订（骑马钉）：每张 A4 横版含左右两个半页；双面打印、对折后与导出 PDF 一致（不足 4 的倍数时尾部补白半页）。'
+                : '当前为普通 PDF：A4 竖版，编辑列表第几页即 PDF 第几页，一纸一页。'}
             </p>
           </div>
           <button
@@ -149,10 +155,10 @@ export function BookPreviewModal({ open, onClose, book }: Props) {
           </button>
         </header>
         <div className="book-preview-body">
-          {spreads.length === 0 ? (
+          {book.pages.length === 0 ? (
             <p className="hint-muted">暂无页面。</p>
-          ) : (
-            spreads.map((sp) => {
+          ) : isBooklet ? (
+            bookletSpreads.map((sp) => {
               const label = `第 ${sp.sheetNum} 张纸 · ${sp.side} · PDF 第 ${sp.pdfPageIndex + 1} 页 · 左：${formatHalfLabel(book, sp.li)} · 右：${formatHalfLabel(book, sp.ri)}`
               return (
                 <section
@@ -184,6 +190,25 @@ export function BookPreviewModal({ open, onClose, book }: Props) {
                     ) : (
                       <BlankHalf scale={PREVIEW_SCALE} />
                     )}
+                  </div>
+                </section>
+              )
+            })
+          ) : (
+            book.pages.map((page, i) => {
+              const label = `PDF 第 ${i + 1} 页 · ${formatHalfLabel(book, i)}`
+              return (
+                <section
+                  key={page.id}
+                  className="book-preview-spread book-preview-fullpage"
+                >
+                  <h3 className="book-preview-spread-title">{label}</h3>
+                  <div className="book-preview-fullpage-stage">
+                    <ScaledPage
+                      book={book}
+                      page={page}
+                      scale={PREVIEW_SCALE_FULL}
+                    />
                   </div>
                 </section>
               )

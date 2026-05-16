@@ -2,6 +2,7 @@ import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
 import {
   A4_LANDSCAPE_MM,
+  A4_PORTRAIT_MM,
   HALF_A4_MM,
   PAGE_PREVIEW_WIDTH_PX,
   pagePreviewHeightPx,
@@ -9,6 +10,9 @@ import {
 import type { SongBook } from '../types/book'
 
 const EXPORT_SCALE = 2
+
+/** 骑马钉：两半页合一横版 PDF 页 | 普通：每个逻辑页一张 A4 竖版。 */
+export type PdfLayoutMode = 'booklet' | 'fullPage'
 
 function previewHeightPx(): number {
   return pagePreviewHeightPx()
@@ -57,21 +61,14 @@ export function bookletLandscapeIndexPairs(logicalCount: number): [number, numbe
   return pairs
 }
 
-/**
- * 每页 PDF 为 A4 横版；左 / 右为两个半幅 A4（148.5×210 mm）。
- * 页序为骑马钉折帖：双面打印后沿长边对折、叠齐装订即得正确阅读顺序（总页数自动补足到 4 的倍数，尾部为白半页）。
- */
-export async function exportSongbookPdf(
-  book: SongBook,
+export type ExportSongbookPdfOptions = {
+  mode?: PdfLayoutMode
+}
+
+async function exportBooklet(
   pageElementsInOrder: (HTMLElement | null)[],
-): Promise<void> {
-  if (typeof document !== 'undefined' && document.fonts?.ready) {
-    await document.fonts.ready
-  }
-
+): Promise<jsPDF> {
   const n = pageElementsInOrder.length
-  if (n === 0) return
-
   const indexPairs = bookletLandscapeIndexPairs(n)
 
   const doc = new jsPDF({
@@ -133,6 +130,61 @@ export async function exportSongbookPdf(
     }
   }
 
+  return doc
+}
+
+async function exportFullPage(
+  pageElementsInOrder: (HTMLElement | null)[],
+): Promise<jsPDF> {
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: [A4_PORTRAIT_MM.width, A4_PORTRAIT_MM.height],
+  })
+
+  const { width: pw, height: ph } = A4_PORTRAIT_MM
+
+  for (let i = 0; i < pageElementsInOrder.length; i++) {
+    const el = pageElementsInOrder[i]
+    if (i > 0) {
+      doc.addPage([pw, ph], 'portrait')
+    }
+    if (el) {
+      const img = await captureHalfPage(el)
+      doc.addImage(img, 'PNG', 0, 0, pw, ph, undefined, 'FAST')
+    } else {
+      doc.setFillColor(255, 255, 255)
+      doc.rect(0, 0, pw, ph, 'F')
+    }
+  }
+
+  return doc
+}
+
+/**
+ * - `booklet`：A4 横版，每页 PDF 左右各一个半幅；骑马钉折帖顺序（补足 4 的倍数白页）。
+ * - `fullPage`：A4 竖版，编辑顺序每逻辑页单独一页 PDF。
+ */
+export async function exportSongbookPdf(
+  book: SongBook,
+  pageElementsInOrder: (HTMLElement | null)[],
+  options?: ExportSongbookPdfOptions,
+): Promise<void> {
+  if (typeof document !== 'undefined' && document.fonts?.ready) {
+    await document.fonts.ready
+  }
+
+  const n = pageElementsInOrder.length
+  if (n === 0) return
+
+  const mode: PdfLayoutMode = options?.mode ?? 'booklet'
+  const doc =
+    mode === 'fullPage'
+      ? await exportFullPage(pageElementsInOrder)
+      : await exportBooklet(pageElementsInOrder)
+
   const safeName = book.title.replace(/[/\\?%*:|"<>]/g, '-').slice(0, 80)
-  doc.save(`${safeName || '儿歌串编'}.pdf`)
+  const stem = safeName || '儿歌串编'
+  const suffix = mode === 'fullPage' ? '-逐页A4' : '-骑马钉对折'
+  doc.save(`${stem}${suffix}.pdf`)
 }

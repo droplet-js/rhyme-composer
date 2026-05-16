@@ -378,6 +378,11 @@
   gap: 0.35rem;
 }
 
+.pdf-layout-field .input.select {
+  min-width: 12.5rem;
+  max-width: 18rem;
+}
+
 .field.check {
   flex-direction: row;
   align-items: center;
@@ -624,4 +629,19 @@
     rgb(0 0 0 / 0.14),
     rgb(0 0 0 / 0.06)
   );
+}
+
+.book-preview-fullpage-stage {
+  display: flex;
+  justify-content: center;
+  padding: 0.75rem 0.5rem 1rem;
+  border-radius: var(--radius);
+  background: repeating-linear-gradient(
+    45deg,
+    #ebe4d8,
+    #ebe4d8 7px,
+    #e6dfd3 7px,
+    #e6dfd3 14px
+  );
+  border: 1px solid var(--border);
 }

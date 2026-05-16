@@ -1,4 +1,4 @@
-import { defaultFontPresetId } from '../constants/childFonts'
+import { normalizeFontPresetId } from '../constants/childFonts'
 import type { PageBackground, SongBook, SongPage, TextBlock } from '../types/book'
 
 const STORAGE_KEY = 'rhyme_composer:state:v1'
@@ -23,10 +23,9 @@ function migrateTextBlock(raw: unknown): TextBlock | null {
   return {
     id: typeof raw.id === 'string' ? raw.id : crypto.randomUUID(),
     text: typeof raw.text === 'string' ? raw.text : '',
-    fontPresetId:
-      typeof raw.fontPresetId === 'string'
-        ? raw.fontPresetId
-        : defaultFontPresetId(),
+    fontPresetId: normalizeFontPresetId(
+      typeof raw.fontPresetId === 'string' ? raw.fontPresetId : undefined,
+    ),
     xPct: typeof raw.xPct === 'number' && Number.isFinite(raw.xPct) ? raw.xPct : 10,
     yPct: typeof raw.yPct === 'number' && Number.isFinite(raw.yPct) ? raw.yPct : 12,
     widthPct:
@@ -88,7 +87,7 @@ function migratePage(raw: unknown): SongPage | null {
 
 function migrateBook(raw: unknown): SongBook | null {
   if (!isRecord(raw)) return null
-  const title = typeof raw.title === 'string' ? raw.title : '我的儿歌串编'
+  const title = typeof raw.title === 'string' ? raw.title : '儿歌集'
   const pagesIn = Array.isArray(raw.pages) ? raw.pages : []
   const pages = pagesIn
     .map(migratePage)

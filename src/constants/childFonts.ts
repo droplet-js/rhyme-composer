@@ -1,36 +1,51 @@
-/** Webfont + 系统字体预设，用于 {@link SongPage} 内文字块。 */
+/** Webfont + 系统字体预设，用于 {@link SongPage} 内文字块。均为中文（简体）可用的显示字体。 */
 
 export const FONT_PRESETS = [
   {
     id: 'songti',
-    label: '宋体 · 经典正文',
+    label: '宋体 · 系统经典',
     stack:
       '"Songti SC", "STSong", "Noto Serif SC", "Source Han Serif SC", serif',
   },
   {
+    id: 'noto-sans-sc',
+    label: '思源黑体 · 清晰现代',
+    stack: '"Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+  },
+  {
+    id: 'noto-serif-sc',
+    label: '思源宋体 · 阅读正文',
+    stack: '"Noto Serif SC", "Songti SC", "STSong", "Source Han Serif SC", serif',
+  },
+  {
     id: 'zcool-kuaile',
-    label: '站酷快乐体 · 卡通',
+    label: '站酷快乐体 · 卡通标题',
     stack: '"ZCOOL KuaiLe", "PingFang SC", "Hiragino Sans GB", sans-serif',
   },
   {
     id: 'zcool-huangyou',
-    label: '黄油体 · 圆润粗字',
+    label: '站酷黄油体 · 圆润粗字',
     stack:
       '"ZCOOL QingKe HuangYou", "PingFang SC", "Hiragino Sans GB", sans-serif',
   },
   {
     id: 'zcool-xiaowei',
-    label: '站酷小薇 · 轻盈手写',
+    label: '站酷小薇体 · 轻盈手写',
     stack: '"ZCOOL XiaoWei", "PingFang SC", "Hiragino Sans GB", serif',
   },
   {
-    id: 'zen-maru-gothic',
-    label: 'Zen Maru Gothic · 日系圆柔',
-    stack: '"Zen Maru Gothic", "PingFang SC", "Hiragino Sans GB", sans-serif',
+    id: 'wdxl-lubrifont-sc',
+    label: '润滑体 · 综艺圆厚',
+    stack: '"WDXL Lubrifont SC", "PingFang SC", "Hiragino Sans GB", sans-serif',
+  },
+  {
+    id: 'lxgw-wenkai-tc',
+    label: '霞鹜文楷 · 温润楷书',
+    stack: '"LXGW WenKai TC", "Kaiti SC", "STKaiti", serif',
   },
   {
     id: 'ma-shan-zheng',
-    label: '马善政楷书 · 毛笔感',
+    label: '马善政毛笔楷书',
     stack: '"Ma Shan Zheng", "Kaiti SC", "STKaiti", serif',
   },
   {
@@ -45,83 +60,26 @@ export const FONT_PRESETS = [
   },
   {
     id: 'long-cang',
-    label: '龙仓 · 行书',
+    label: '龙仓行书 · 流畅手写',
     stack: '"Long Cang", "Kaiti SC", "STKaiti", serif',
-  },
-  {
-    id: 'yuji-boku',
-    label: 'Yuji Boku · 童稚俏皮',
-    stack: '"Yuji Boku", "PingFang SC", "Hiragino Sans GB", serif',
-  },
-  {
-    id: 'hachi-maru-pop',
-    label: 'Hachi Maru Pop · 泡泡圆体',
-    stack: '"Hachi Maru Pop", "PingFang SC", "Hiragino Sans GB", sans-serif',
-  },
-  {
-    id: 'kosugi-maru',
-    label: 'Kosugi Maru · 日系圆体',
-    stack: '"Kosugi Maru", "PingFang SC", "Hiragino Sans GB", sans-serif',
-  },
-  {
-    id: 'stick',
-    label: 'Stick · 竖条趣味',
-    stack: '"Stick", "PingFang SC", "Hiragino Sans GB", sans-serif',
-  },
-  {
-    id: 'fredoka',
-    label: 'Fredoka · 圆角英文',
-    stack: '"Fredoka", "PingFang SC", "Hiragino Sans GB", sans-serif',
-  },
-  {
-    id: 'nunito',
-    label: 'Nunito · 亲和圆角',
-    stack: '"Nunito", "PingFang SC", "Hiragino Sans GB", sans-serif',
-  },
-  {
-    id: 'comfortaa',
-    label: 'Comfortaa · 几何圆润',
-    stack: '"Comfortaa", "PingFang SC", "Hiragino Sans GB", sans-serif',
-  },
-  {
-    id: 'baloo2',
-    label: 'Baloo 2 · 印度童趣',
-    stack: '"Baloo 2", "PingFang SC", "Hiragino Sans GB", sans-serif',
-  },
-  {
-    id: 'chewy',
-    label: 'Chewy · 软糖趣味',
-    stack: '"Chewy", "PingFang SC", "Hiragino Sans GB", sans-serif',
-  },
-  {
-    id: 'bubblegum-sans',
-    label: 'Bubblegum · 泡泡糖',
-    stack: '"Bubblegum Sans", "PingFang SC", "Hiragino Sans GB", sans-serif',
-  },
-  {
-    id: 'patrick-hand',
-    label: 'Patrick Hand · 手帐体',
-    stack: '"Patrick Hand", "PingFang SC", "Hiragino Sans GB", cursive',
-  },
-  {
-    id: 'amatic-sc',
-    label: 'Amatic SC · 窄条艺术',
-    stack: '"Amatic SC", "PingFang SC", "Hiragino Sans GB", sans-serif',
-  },
-  {
-    id: 'luckiest-guy',
-    label: 'Luckiest Guy · 美式漫画',
-    stack: '"Luckiest Guy", "PingFang SC", "Hiragino Sans GB", cursive',
   },
 ] as const
 
 export type FontPresetId = (typeof FONT_PRESETS)[number]['id']
+
+const PRESET_IDS = new Set<string>(FONT_PRESETS.map((p) => p.id))
 
 const DEFAULT_ID: FontPresetId = 'songti'
 
 const STACK_BY_ID = Object.fromEntries(
   FONT_PRESETS.map((p) => [p.id, p.stack]),
 ) as Record<FontPresetId, string>
+
+/** 持久化/导入时：未知或已下线 id 回退为默认，避免下拉框与渲染不一致。 */
+export function normalizeFontPresetId(id: string | undefined): FontPresetId {
+  if (id && PRESET_IDS.has(id)) return id as FontPresetId
+  return DEFAULT_ID
+}
 
 export function fontStackForPreset(id: string | undefined): string {
   if (id && id in STACK_BY_ID) return STACK_BY_ID[id as FontPresetId]

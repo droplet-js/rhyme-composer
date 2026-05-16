@@ -67,7 +67,7 @@ function cloneSongPage(source: SongPage): SongPage {
 }
 
 const initialBook: SongBook = {
-  title: '我的儿歌串编',
+  title: '儿歌集',
   pages: [
     {
       id: crypto.randomUUID(),
@@ -402,7 +402,7 @@ function App() {
         <div className="app-brand">
           <span className="app-brand-mark" aria-hidden />
           <div>
-            <h1 className="app-title">儿歌串编</h1>
+            <h1 className="app-title">儿歌创编</h1>
             <p className="app-sub">
               RhymeComposer · 自定义背景与文字位置 · 半张 A4 · 横版 PDF 双页合一
             </p>

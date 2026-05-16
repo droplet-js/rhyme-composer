@@ -184,7 +184,7 @@ export async function exportSongbookPdf(
       : await exportBooklet(pageElementsInOrder)
 
   const safeName = book.title.replace(/[/\\?%*:|"<>]/g, '-').slice(0, 80)
-  const stem = safeName || '儿歌串编'
+  const stem = safeName || '儿歌集'
   const suffix = mode === 'fullPage' ? '-逐页A4' : '-骑马钉对折'
   doc.save(`${stem}${suffix}.pdf`)
 }

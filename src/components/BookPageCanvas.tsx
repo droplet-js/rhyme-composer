@@ -345,7 +345,7 @@ export function BookPageCanvas({
             bottom: '2%',
             textAlign: 'center',
             fontSize: 11,
-            fontFamily: fontStackForPreset('nunito'),
+            fontFamily: fontStackForPreset('noto-sans-sc'),
             color: 'rgb(44 36 22 / 0.55)',
             pointerEvents: 'none',
             zIndex: 2,

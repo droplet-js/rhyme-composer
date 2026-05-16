@@ -1,5 +1,5 @@
 import JSZip from 'jszip'
-import { defaultFontPresetId } from '../constants/childFonts'
+import { normalizeFontPresetId } from '../constants/childFonts'
 import type { PageBackground, SongBook, SongPage, TextBlock } from '../types/book'
 
 /** 根目录清单（JSON）；背景二进制在 `backgrounds/` 下。 */
@@ -17,10 +17,9 @@ function migrateTextBlock(raw: unknown): TextBlock | null {
   return {
     id: typeof raw.id === 'string' ? raw.id : crypto.randomUUID(),
     text: typeof raw.text === 'string' ? raw.text : '',
-    fontPresetId:
-      typeof raw.fontPresetId === 'string'
-        ? raw.fontPresetId
-        : defaultFontPresetId(),
+    fontPresetId: normalizeFontPresetId(
+      typeof raw.fontPresetId === 'string' ? raw.fontPresetId : undefined,
+    ),
     xPct: typeof raw.xPct === 'number' && Number.isFinite(raw.xPct) ? raw.xPct : 10,
     yPct: typeof raw.yPct === 'number' && Number.isFinite(raw.yPct) ? raw.yPct : 12,
     widthPct:
@@ -110,7 +109,7 @@ function parseBundleBook(
   const title =
     typeof raw.title === 'string' && raw.title.trim() !== ''
       ? raw.title
-      : '我的儿歌串编'
+      : '儿歌集'
   const pagesIn = Array.isArray(raw.pages) ? raw.pages : []
   const pages = pagesIn
     .map(migratePageZip)

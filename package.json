@@ -2,7 +2,7 @@
   "name": "rhyme-composer",
   "private": true,
   "version": "0.0.0",
-  "description": "儿歌串编 RhymeComposer — 在浏览器中编排半张 A4 页面：多文字块、自定义背景、吸附对齐；导出横版 PDF 双页合一；localStorage 自动保存；支持 ZIP（JSON + 背景图）导入 / 导出。",
+  "description": "儿歌创编 RhymeComposer — 在浏览器中编排半张 A4 页面：多文字块、自定义背景、吸附对齐；导出横版 PDF 双页合一；localStorage 自动保存；支持 ZIP（JSON + 背景图）导入 / 导出。",
   "keywords": [
     "rhyme-composer",
     "儿歌",

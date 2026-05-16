@@ -343,10 +343,8 @@ function App() {
   }, [book.pages, selectedIndex, selectedBlockId])
 
   const handleExport = useCallback(async () => {
-    const elements = book.pages
-      .map((p) => pageRefs.current.get(p.id))
-      .filter((e): e is HTMLDivElement => e != null)
-    if (elements.length === 0) return
+    const elements = book.pages.map((p) => pageRefs.current.get(p.id) ?? null)
+    if (!elements.some((e) => e != null)) return
     setExporting(true)
     try {
       await exportSongbookPdf(book, elements)
@@ -496,14 +494,14 @@ function App() {
             onClick={() => bundleImportRef.current?.click()}
           >
             导入数据
-          </button>
+          </button>            
           <button
             type="button"
             className="btn ghost"
             onClick={() => setBookPreviewOpen(true)}
             disabled={book.pages.length === 0}
           >
-            书籍预览
+            折帖总览
           </button>
           <button
             type="button"
@@ -612,8 +610,8 @@ function App() {
             ))}
           </ol>
           <p className="sidebar-hint">
-            用 ↑↓ 调整顺序；⧉ 复制当前页到下一页（背景与文字块一并复制）；导出 PDF
-            顺序与列表一致。
+            用 ↑↓ 调整顺序；⧉ 复制当前页。顶栏「折帖总览」查看骑马钉打印顺序，与导出 PDF
+            一致。
           </p>
         </aside>
 
@@ -801,7 +799,7 @@ function App() {
                 )}
                 {selectedPage.blocks.length > 0 && !selectedBlock && (
                   <p className="hint-muted">
-                    点击某个「块」标签，或在预览里点选文字，即可编辑内容与样式。
+                    点击某个「块」标签，或在下方画布中点选文字，即可编辑内容与样式。
                   </p>
                 )}
 
@@ -1052,9 +1050,9 @@ function App() {
                 )}
               </section>
 
-              <section className="preview-wrap" aria-label="页面预览">
+              <section className="preview-wrap" aria-label="当前页编辑画布">
                 <h2 className="preview-heading">
-                  排版预览（拖拽吸附：边与中线）
+                  当前页编辑（拖拽吸附：边与中线）
                 </h2>
                 <div
                   className="preview-stage"

@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react'
 import { BookPageCanvas } from './BookPageCanvas'
 import { PAGE_PREVIEW_WIDTH_PX, pagePreviewHeightPx } from '../constants/paper'
+import { bookletLandscapeIndexPairs } from '../lib/exportSongbookPdf'
 import type { SongBook, SongPage } from '../types/book'
 
 type Props = {
@@ -62,19 +63,41 @@ function ScaledPage({
   )
 }
 
+function pageAt(book: SongBook, index: number): SongPage | null {
+  if (index < 0 || index >= book.pages.length) return null
+  return book.pages[index]
+}
+
+function formatHalfLabel(book: SongBook, index: number): string {
+  if (index < 0 || index >= book.pages.length) return '白页'
+  const p = book.pages[index]
+  const name = p.pageName.trim()
+  const n = index + 1
+  if (name) return `编辑第 ${n} 页 · ${name.length > 10 ? `${name.slice(0, 10)}…` : name}`
+  return `编辑第 ${n} 页`
+}
+
 export function BookPreviewModal({ open, onClose, book }: Props) {
   const slotH = pagePreviewHeightPx() * PREVIEW_SCALE
 
   const spreads = useMemo(() => {
-    const pages = book.pages
-    const out: { left: SongPage; right: SongPage | null }[] = []
-    for (let i = 0; i < pages.length; i += 2) {
-      const left = pages[i]
-      if (!left) continue
-      out.push({ left, right: pages[i + 1] ?? null })
-    }
-    return out
-  }, [book.pages])
+    const n = book.pages.length
+    if (n === 0) return []
+    const pairs = bookletLandscapeIndexPairs(n)
+    return pairs.map(([li, ri], pdfPageIndex) => {
+      const sheetNum = Math.floor(pdfPageIndex / 2) + 1
+      const side = pdfPageIndex % 2 === 0 ? '正面' : '背面'
+      return {
+        pdfPageIndex,
+        sheetNum,
+        side,
+        left: pageAt(book, li),
+        right: pageAt(book, ri),
+        li,
+        ri,
+      }
+    })
+  }, [book])
 
   useEffect(() => {
     if (!open) return
@@ -108,10 +131,12 @@ export function BookPreviewModal({ open, onClose, book }: Props) {
         <header className="book-preview-header">
           <div>
             <h2 id="book-preview-title" className="book-preview-title">
-              书籍预览
+              折帖总览
             </h2>
             <p className="book-preview-sub">
-              顺序与导出 PDF 一致：每开为横版 A4，左、右各一页（半张 A4）。
+              与导出 PDF 相同，为骑马钉折帖顺序：每张 A4
+              横版一页；按张纸「正面 → 背面」双面打印，对折装订后即得正确页序（不足 4
+              的倍数时会自动补白半页）。
             </p>
           </div>
           <button
@@ -127,21 +152,24 @@ export function BookPreviewModal({ open, onClose, book }: Props) {
           {spreads.length === 0 ? (
             <p className="hint-muted">暂无页面。</p>
           ) : (
-            spreads.map((sp, si) => {
-              const leftNum = si * 2 + 1
-              const rightNum = si * 2 + 2
-              const label = sp.right
-                ? `第 ${si + 1} 开 · 页 ${leftNum}–${rightNum}`
-                : `第 ${si + 1} 开 · 页 ${leftNum}（右侧为空白半页）`
+            spreads.map((sp) => {
+              const label = `第 ${sp.sheetNum} 张纸 · ${sp.side} · PDF 第 ${sp.pdfPageIndex + 1} 页 · 左：${formatHalfLabel(book, sp.li)} · 右：${formatHalfLabel(book, sp.ri)}`
               return (
-                <section key={`${sp.left.id}-${si}`} className="book-preview-spread">
+                <section
+                  key={`booklet-pdf-${sp.pdfPageIndex}`}
+                  className="book-preview-spread"
+                >
                   <h3 className="book-preview-spread-title">{label}</h3>
                   <div className="book-preview-spread-pages">
-                    <ScaledPage
-                      book={book}
-                      page={sp.left}
-                      scale={PREVIEW_SCALE}
-                    />
+                    {sp.left ? (
+                      <ScaledPage
+                        book={book}
+                        page={sp.left}
+                        scale={PREVIEW_SCALE}
+                      />
+                    ) : (
+                      <BlankHalf scale={PREVIEW_SCALE} />
+                    )}
                     <div
                       className="book-preview-crease"
                       style={{ height: slotH }}

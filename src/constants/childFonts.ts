@@ -1,4 +1,4 @@
-/** Webfont + 系统字体预设，用于 {@link SongPage} 内文字块。均为中文（简体）可用的显示字体。 */
+/** Webfont + 系统字体预设。中文优先；圆体 / 日文明朝等 Web 字库可能缺少数生僻字，由栈内黑体补足。 */
 
 export const FONT_PRESETS = [
   {
@@ -32,6 +32,54 @@ export const FONT_PRESETS = [
     id: 'zcool-xiaowei',
     label: '站酷小薇体 · 轻盈手写',
     stack: '"ZCOOL XiaoWei", "PingFang SC", "Hiragino Sans GB", serif',
+  },
+  {
+    id: 'hachi-maru-pop',
+    label: '泡泡圆体 · Hachi Maru',
+    stack:
+      '"Hachi Maru Pop", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+  },
+  {
+    id: 'zen-maru-gothic',
+    label: 'Zen Maru · 日系柔圆',
+    stack:
+      '"Zen Maru Gothic", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+  },
+  {
+    id: 'kosugi-maru',
+    label: 'Kosugi Maru · 圆角黑体',
+    stack:
+      '"Kosugi Maru", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+  },
+  {
+    id: 'yuji-boku',
+    label: 'Yuji Boku · 马克童趣',
+    stack:
+      '"Yuji Boku", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", serif',
+  },
+  {
+    id: 'mochiy-pop-one',
+    label: 'Mochiy Pop · 海报扁字',
+    stack:
+      '"Mochiy Pop One", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+  },
+  {
+    id: 'stick',
+    label: 'Stick · 竖线趣味',
+    stack:
+      '"Stick", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+  },
+  {
+    id: 'reggae-one',
+    label: 'Reggae One · 复古综艺',
+    stack:
+      '"Reggae One", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+  },
+  {
+    id: 'shippori-mincho-b1',
+    label: 'Shippori Mincho · 明朝纸质',
+    stack:
+      '"Shippori Mincho B1", "Songti SC", "Noto Serif SC", "STSong", serif',
   },
   {
     id: 'wdxl-lubrifont-sc',

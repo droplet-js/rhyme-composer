@@ -1,8 +1,15 @@
-import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { BookPageCanvas } from './components/BookPageCanvas'
 import { FONT_PRESETS, defaultFontPresetId } from './constants/childFonts'
 import { pagePreviewHeightPx } from './constants/paper'
 import { loadBookAppState, saveBookAppState } from './lib/bookPersistence'
+import {
+  alignBlockRelativeToBlock,
+  applyLayoutAlign,
+  resolvePairReferenceBlock,
+  type BlockPairAlignKind,
+  type LayoutAlignKind,
+} from './lib/blockLayout'
 import { exportSongbookPdf } from './lib/exportSongbookPdf'
 import type {
   PageBackground,
@@ -245,6 +252,7 @@ function App() {
   )
   const [exporting, setExporting] = useState(false)
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null)
+  const [pairRefBlockId, setPairRefBlockId] = useState<string | null>(null)
   const pageRefs = useRef<Map<string, HTMLDivElement>>(new Map())
   const bgFileRef = useRef<HTMLInputElement>(null)
 
@@ -269,6 +277,22 @@ function App() {
   const selectedPage = book.pages[selectedIndex] ?? book.pages[0]
   const selectedBlock =
     selectedPage?.blocks.find((b) => b.id === selectedBlockId) ?? null
+
+  const pairReferenceBlock = useMemo(() => {
+    const page = book.pages[selectedIndex]
+    if (!page || !selectedBlockId) return null
+    return resolvePairReferenceBlock(
+      page.blocks,
+      selectedBlockId,
+      pairRefBlockId,
+    )
+  }, [book.pages, selectedIndex, selectedBlockId, pairRefBlockId])
+
+  const pairOtherBlocks = useMemo(() => {
+    const page = book.pages[selectedIndex]
+    if (!page || !selectedBlockId) return []
+    return page.blocks.filter((b) => b.id !== selectedBlockId)
+  }, [book.pages, selectedIndex, selectedBlockId])
 
   const handleExport = useCallback(async () => {
     const elements = book.pages
@@ -306,6 +330,23 @@ function App() {
       blockId: selectedBlock.id,
       patch,
     })
+  }
+
+  const applyBlockLayout = (kind: LayoutAlignKind) => {
+    if (!selectedBlock) return
+    const next = applyLayoutAlign(selectedBlock, kind, previewHeight)
+    patchBlock(next)
+  }
+
+  const applyPairAlign = (kind: BlockPairAlignKind) => {
+    if (!selectedBlock || !pairReferenceBlock) return
+    const next = alignBlockRelativeToBlock(
+      selectedBlock,
+      pairReferenceBlock,
+      kind,
+      previewHeight,
+    )
+    patchBlock(next)
   }
 
   return (
@@ -744,8 +785,99 @@ function App() {
                         </button>
                       ))}
                     </div>
+                    <p className="field-label">位置辅助</p>
+                    <div
+                      className="layout-quick-bar"
+                      role="group"
+                      aria-label="块在页面上的位置"
+                    >
+                      {(
+                        [
+                          ['h-center', '水平居中'],
+                          ['left', '贴左'],
+                          ['right', '贴右'],
+                          ['v-center', '垂直居中'],
+                          ['top', '贴上'],
+                          ['bottom', '贴底'],
+                        ] as const
+                      ).map(([kind, lab]) => (
+                        <button
+                          key={kind}
+                          type="button"
+                          className="align-btn layout-quick-btn"
+                          onClick={() => applyBlockLayout(kind)}
+                        >
+                          {lab}
+                        </button>
+                      ))}
+                    </div>
+                    {pairOtherBlocks.length > 0 && (
+                      <>
+                        <p className="field-label">与另一块对齐</p>
+                        <label className="field">
+                          <span className="field-label">参照文字块</span>
+                          <select
+                            className="input select fullwidth"
+                            value={pairReferenceBlock?.id ?? ''}
+                            onChange={(e) =>
+                              setPairRefBlockId(
+                                e.target.value ? e.target.value : null,
+                              )
+                            }
+                          >
+                            {pairOtherBlocks.map((b) => {
+                              const num =
+                                selectedPage.blocks.findIndex(
+                                  (x) => x.id === b.id,
+                                ) + 1
+                              const preview = b.text.trim()
+                              return (
+                                <option key={b.id} value={b.id}>
+                                  块 {num}
+                                  {preview
+                                    ? ` · ${
+                                        preview.length > 14
+                                          ? `${preview.slice(0, 14)}…`
+                                          : preview
+                                      }`
+                                    : ''}
+                                </option>
+                              )
+                            })}
+                          </select>
+                        </label>
+                        <div
+                          className="layout-quick-bar pair-align-bar"
+                          role="group"
+                          aria-label="相对参照块对齐"
+                        >
+                          {(
+                            [
+                              ['left-left', '左对左'],
+                              ['right-right', '右对右'],
+                              ['center-h', '水平居中'],
+                              ['top-top', '顶对顶'],
+                              ['bottom-bottom', '底对底'],
+                              ['center-v', '垂直居中'],
+                            ] as const
+                          ).map(([kind, lab]) => (
+                            <button
+                              key={kind}
+                              type="button"
+                              className="align-btn layout-quick-btn"
+                              onClick={() => applyPairAlign(kind)}
+                            >
+                              {lab}
+                            </button>
+                          ))}
+                        </div>
+                        <p className="hint-muted">
+                          移动当前选中块，使其与参照块左/右/水平中心线，或顶/底/垂直中心线对齐（盒高度按字号与行数估算）。
+                        </p>
+                      </>
+                    )}
                     <p className="hint-muted">
-                      在右侧预览中拖拽块调整位置；点击空白处取消选中。
+                      拖拽时靠近边缘或中线会自动吸附，并显示金色参考线；也可用「位置辅助」按钮。点击画布空白处取消选中。
                     </p>
                     <button
                       type="button"
@@ -766,7 +898,9 @@ function App() {
               </section>
 
               <section className="preview-wrap" aria-label="页面预览">
-                <h2 className="preview-heading">排版预览（拖拽移动）</h2>
+                <h2 className="preview-heading">
+                  排版预览（拖拽吸附：边与中线）
+                </h2>
                 <div
                   className="preview-stage"
                   style={{ minHeight: previewHeight + 48 }}

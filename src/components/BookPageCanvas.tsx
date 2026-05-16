@@ -1,10 +1,45 @@
-import { useCallback, useEffect, useRef } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react'
 import { fontStackForPreset } from '../constants/childFonts'
 import { PAGE_PREVIEW_WIDTH_PX, pagePreviewHeightPx } from '../constants/paper'
+import {
+  SNAP_THRESHOLD_PCT,
+  estimateBlockHeightPct,
+  maxTopPctForBlock,
+} from '../lib/blockLayout'
 import type { SongBook, SongPage, TextBlock } from '../types/book'
 
 function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n))
+}
+
+type SnapGuides = {
+  vx?: 'left' | 'center' | 'right'
+  hy?: 'top' | 'center' | 'bottom'
+}
+
+function snap1D<T extends string>(
+  value: number,
+  pairs: ReadonlyArray<readonly [number, T]>,
+  threshold: number,
+): { val: number; tag?: T } {
+  let best = value
+  let tag: T | undefined
+  let bestD = threshold + 1
+  for (const [target, label] of pairs) {
+    const d = Math.abs(value - target)
+    if (d <= threshold && d < bestD) {
+      best = target
+      bestD = d
+      tag = label
+    }
+  }
+  return { val: best, tag }
 }
 
 type Props = {
@@ -15,6 +50,84 @@ type Props = {
   selectedBlockId?: string | null
   onSelectBlock?: (id: string | null) => void
   onUpdateBlock?: (blockId: string, patch: Partial<TextBlock>) => void
+}
+
+function SnapGuidesOverlay({ g }: { g: SnapGuides }) {
+  const line: CSSProperties = {
+    position: 'absolute',
+    background: 'rgba(184, 134, 11, 0.72)',
+    pointerEvents: 'none',
+    zIndex: 10,
+    boxSizing: 'border-box',
+  }
+  return (
+    <>
+      {g.vx === 'left' && (
+        <div
+          aria-hidden
+          style={{ ...line, left: 0, top: 0, bottom: 0, width: 1 }}
+        />
+      )}
+      {g.vx === 'center' && (
+        <div
+          aria-hidden
+          style={{
+            ...line,
+            left: '50%',
+            top: 0,
+            bottom: 0,
+            width: 1,
+            transform: 'translateX(-50%)',
+          }}
+        />
+      )}
+      {g.vx === 'right' && (
+        <div
+          aria-hidden
+          style={{
+            ...line,
+            left: '100%',
+            top: 0,
+            bottom: 0,
+            width: 1,
+            transform: 'translateX(-100%)',
+          }}
+        />
+      )}
+      {g.hy === 'top' && (
+        <div
+          aria-hidden
+          style={{ ...line, top: 0, left: 0, right: 0, height: 1 }}
+        />
+      )}
+      {g.hy === 'center' && (
+        <div
+          aria-hidden
+          style={{
+            ...line,
+            top: '50%',
+            left: 0,
+            right: 0,
+            height: 1,
+            transform: 'translateY(-50%)',
+          }}
+        />
+      )}
+      {g.hy === 'bottom' && (
+        <div
+          aria-hidden
+          style={{
+            ...line,
+            top: '100%',
+            left: 0,
+            right: 0,
+            height: 1,
+            transform: 'translateY(-100%)',
+          }}
+        />
+      )}
+    </>
+  )
 }
 
 export function BookPageCanvas({
@@ -28,6 +141,7 @@ export function BookPageCanvas({
 }: Props) {
   void _book
   const rootRef = useRef<HTMLDivElement | null>(null)
+  const [snapGuides, setSnapGuides] = useState<SnapGuides | null>(null)
   const dragRef = useRef<{
     blockId: string
     startClientX: number
@@ -77,17 +191,50 @@ export function BookPageCanvas({
       const dyPct = ((e.clientY - d.startClientY) / rect.height) * 100
       const block = p.blocks.find((b) => b.id === d.blockId)
       if (!block) return
-      const nx = clamp(
+
+      const el = root.querySelector(
+        `[data-block-id="${d.blockId}"]`,
+      ) as HTMLElement | null
+      let hPct = estimateBlockHeightPct(block, rect.height)
+      if (el) {
+        const br = el.getBoundingClientRect()
+        hPct = Math.max(4, (br.height / rect.height) * 100)
+      }
+      const wPct = block.widthPct
+      const maxTop = maxTopPctForBlock(block, rect.height)
+
+      const nxRaw = clamp(
         d.originXPct + dxPct,
         0,
-        Math.max(0, 100 - block.widthPct),
+        Math.max(0, 100 - wPct),
       )
-      const ny = clamp(d.originYPct + dyPct, 0, 95)
-      ou(d.blockId, { xPct: nx, yPct: ny })
+      const nyRaw = clamp(d.originYPct + dyPct, 0, maxTop)
+
+      const xPairs = [
+        [0, 'left'],
+        [50 - wPct / 2, 'center'],
+        [100 - wPct, 'right'],
+      ] as const
+      const yPairs = [
+        [0, 'top'],
+        [50 - hPct / 2, 'center'],
+        [maxTop, 'bottom'],
+      ] as const
+
+      const sx = snap1D(nxRaw, xPairs, SNAP_THRESHOLD_PCT)
+      const sy = snap1D(nyRaw, yPairs, SNAP_THRESHOLD_PCT)
+
+      setSnapGuides({
+        vx: sx.tag,
+        hy: sy.tag,
+      })
+
+      ou(d.blockId, { xPct: sx.val, yPct: sy.val })
     }
 
     const onUp = () => {
       dragRef.current = null
+      setSnapGuides(null)
     }
 
     window.addEventListener('mousemove', onMove)
@@ -96,7 +243,7 @@ export function BookPageCanvas({
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
     }
-  }, [interactive])
+  }, [interactive, setSnapGuides])
 
   const h = pagePreviewHeightPx()
   const w = PAGE_PREVIEW_WIDTH_PX
@@ -149,11 +296,17 @@ export function BookPageCanvas({
           backgroundPosition: 'center',
         }}
       />
+      {interactive &&
+        snapGuides &&
+        (snapGuides.vx != null || snapGuides.hy != null) && (
+          <SnapGuidesOverlay g={snapGuides} />
+        )}
       {page.blocks.map((block) => {
         const selected = interactive && selectedBlockId === block.id
         return (
           <div
             key={block.id}
+            data-block-id={block.id}
             onMouseDown={(e) => startDrag(e, block)}
             style={{
               position: 'absolute',

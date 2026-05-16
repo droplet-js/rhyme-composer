@@ -428,6 +428,22 @@
   padding-top: 0.25rem;
 }
 
+.layout-quick-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.layout-quick-btn {
+  flex: 1 1 calc(33.33% - 0.35rem);
+  min-width: 4.75rem;
+  font-size: 0.78rem;
+}
+
+.pair-align-bar {
+  margin-top: 0.15rem;
+}
+
 .align-bar {
   display: flex;
   gap: 0.35rem;

@@ -11,6 +11,7 @@ import {
   type BlockPairAlignKind,
   type LayoutAlignKind,
 } from './lib/blockLayout'
+import { exportBookDataZip, importBookDataZip, suggestedBundleZipName } from './lib/bookDataBundle'
 import { exportSongbookPdf } from './lib/exportSongbookPdf'
 import type {
   PageBackground,
@@ -139,6 +140,7 @@ type Action =
   | { type: 'removePage'; index: number }
   | { type: 'movePage'; from: number; to: number }
   | { type: 'select'; index: number }
+  | { type: 'importData'; book: SongBook; selectedIndex: number }
 
 function appReducer(state: AppState, action: Action): AppState {
   switch (action.type) {
@@ -268,6 +270,16 @@ function appReducer(state: AppState, action: Action): AppState {
     }
     case 'select':
       return { ...state, selectedIndex: action.index }
+    case 'importData': {
+      const pages =
+        action.book.pages.length > 0 ? action.book.pages : [newPage()]
+      const book = { ...action.book, pages }
+      const selectedIndex = Math.max(
+        0,
+        Math.min(Math.trunc(action.selectedIndex), book.pages.length - 1),
+      )
+      return { book, selectedIndex }
+    }
     default:
       return state
   }
@@ -281,10 +293,16 @@ function App() {
   )
   const [exporting, setExporting] = useState(false)
   const [bookPreviewOpen, setBookPreviewOpen] = useState(false)
+  const [bundleBusy, setBundleBusy] = useState(false)
+  const [bundleFeedback, setBundleFeedback] = useState<{
+    kind: 'ok' | 'err'
+    text: string
+  } | null>(null)
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null)
   const [pairRefBlockId, setPairRefBlockId] = useState<string | null>(null)
   const pageRefs = useRef<Map<string, HTMLDivElement>>(new Map())
   const bgFileRef = useRef<HTMLInputElement>(null)
+  const bundleImportRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const id = window.setTimeout(() => {
@@ -406,6 +424,82 @@ function App() {
           <button
             type="button"
             className="btn ghost"
+            disabled={bundleBusy}
+            onClick={async () => {
+              setBundleFeedback(null)
+              setBundleBusy(true)
+              try {
+                const blob = await exportBookDataZip(book, selectedIndex)
+                const a = document.createElement('a')
+                const url = URL.createObjectURL(blob)
+                a.href = url
+                a.download = suggestedBundleZipName(book.title)
+                a.click()
+                URL.revokeObjectURL(url)
+                setBundleFeedback({
+                  kind: 'ok',
+                  text: '已导出 ZIP（含 book.json 与背景图）',
+                })
+              } catch (e) {
+                setBundleFeedback({
+                  kind: 'err',
+                  text:
+                    e instanceof Error ? e.message : '导出失败',
+                })
+              } finally {
+                setBundleBusy(false)
+              }
+            }}
+          >
+            导出数据
+          </button>
+          <input
+            ref={bundleImportRef}
+            type="file"
+            accept=".zip,application/zip"
+            className="visually-hidden"
+            onChange={async (e) => {
+              const f = e.target.files?.[0]
+              e.target.value = ''
+              if (!f) return
+              if (
+                !window.confirm(
+                  '导入将替换当前书籍内容（可与本地已保存数据不同），确定继续？',
+                )
+              ) {
+                return
+              }
+              setBundleFeedback(null)
+              setBundleBusy(true)
+              try {
+                const { book: nb, selectedIndex: si } =
+                  await importBookDataZip(f)
+                dispatch({ type: 'importData', book: nb, selectedIndex: si })
+                setSelectedBlockId(null)
+                setPairRefBlockId(null)
+                setBundleFeedback({ kind: 'ok', text: '导入成功' })
+              } catch (err) {
+                setBundleFeedback({
+                  kind: 'err',
+                  text:
+                    err instanceof Error ? err.message : '导入失败',
+                })
+              } finally {
+                setBundleBusy(false)
+              }
+            }}
+          />
+          <button
+            type="button"
+            className="btn ghost"
+            disabled={bundleBusy}
+            onClick={() => bundleImportRef.current?.click()}
+          >
+            导入数据
+          </button>
+          <button
+            type="button"
+            className="btn ghost"
             onClick={() => setBookPreviewOpen(true)}
             disabled={book.pages.length === 0}
           >
@@ -419,6 +513,14 @@ function App() {
           >
             {exporting ? '正在导出…' : '导出 PDF'}
           </button>
+          {bundleFeedback && (
+            <span
+              className={`bundle-feedback${bundleFeedback.kind === 'err' ? ' err' : ''}`}
+              role="status"
+            >
+              {bundleFeedback.text}
+            </span>
+          )}
         </div>
       </header>
 

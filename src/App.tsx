@@ -40,7 +40,7 @@ function newPage(): SongPage {
       imageFit: 'cover',
     },
     blocks: [],
-    showPageNumber: true,
+    showPageNumber: false,
     pageNumberDisplay: '',
   }
 }
@@ -52,8 +52,8 @@ const initialBook: SongBook = {
       id: crypto.randomUUID(),
       pageName: '小星星',
       background: { color: '#ffffff', imageFit: 'cover' },
-      showPageNumber: true,
-      pageNumberDisplay: '1',
+      showPageNumber: false,
+      pageNumberDisplay: '',
       blocks: [
         newTextBlock({
           text: '小星星',

@@ -78,7 +78,7 @@ function migratePage(raw: unknown): SongPage | null {
     background: migrateBackground(raw.background),
     blocks,
     showPageNumber:
-      typeof raw.showPageNumber === 'boolean' ? raw.showPageNumber : true,
+      typeof raw.showPageNumber === 'boolean' ? raw.showPageNumber : false,
     pageNumberDisplay:
       typeof raw.pageNumberDisplay === 'string' ? raw.pageNumberDisplay : '',
   }

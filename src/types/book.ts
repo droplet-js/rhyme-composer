@@ -30,7 +30,7 @@ export type SongPage = {
   background: PageBackground
   /** 可为空（纯背景、插图或留白页） */
   blocks: TextBlock[]
-  /** 是否在画布底部显示 {@link pageNumberDisplay} */
+  /** 是否在画布底部显示 {@link pageNumberDisplay}（默认关闭） */
   showPageNumber: boolean
   /**
    * 画布底部显示的页码文案，与页面在书中的顺序无关（如 3、Ⅲ、附录 2）。

@@ -76,6 +76,108 @@ export const FONT_PRESETS = [
       '"Reggae One", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
   },
   {
+    id: 'kiwi-maru',
+    label: 'Kiwi Maru · 猕猴桃圆',
+    stack:
+      '"Kiwi Maru", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+  },
+  {
+    id: 'yuji-syuku',
+    label: 'Yuji Syuku · 隶感毛笔',
+    stack:
+      '"Yuji Syuku", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", serif',
+  },
+  {
+    id: 'yuji-mai',
+    label: 'Yuji Mai · 软笔马克',
+    stack:
+      '"Yuji Mai", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", serif',
+  },
+  {
+    id: 'mochiy-pop-p-one',
+    label: 'Mochiy Pop P · 粗扁海报',
+    stack:
+      '"Mochiy Pop P One", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+  },
+  {
+    id: 'potta-one',
+    label: 'Potta One · 膨胀圆角',
+    stack:
+      '"Potta One", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+  },
+  {
+    id: 'train-one',
+    label: 'Train One · 宽匾招牌',
+    stack:
+      '"Train One", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+  },
+  {
+    id: 'rocknroll-one',
+    label: 'RocknRoll One · 横笔波普',
+    stack:
+      '"RocknRoll One", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+  },
+  {
+    id: 'dela-gothic-one',
+    label: 'Dela Gothic · 极粗竖长',
+    stack:
+      '"Dela Gothic One", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+  },
+  {
+    id: 'dotgothic16',
+    label: 'DotGothic16 · 点阵复古',
+    stack:
+      '"DotGothic16", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+  },
+  {
+    id: 'kaisei-decol',
+    label: 'Kaisei Decol · 装饰明朝',
+    stack:
+      '"Kaisei Decol", "Songti SC", "Noto Serif SC", "STSong", serif',
+  },
+  {
+    id: 'shippori-antique-b1',
+    label: 'Shippori Antique · 古拙明朝',
+    stack:
+      '"Shippori Antique B1", "Songti SC", "Noto Serif SC", "STSong", serif',
+  },
+  {
+    id: 'sawarabi-mincho',
+    label: 'Sawarabi Mincho · 纤细明朝',
+    stack:
+      '"Sawarabi Mincho", "Songti SC", "Noto Serif SC", "STSong", serif',
+  },
+  {
+    id: 'sawarabi-gothic',
+    label: 'Sawarabi Gothic · 纤细黑体',
+    stack:
+      '"Sawarabi Gothic", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+  },
+  {
+    id: 'new-tegomin',
+    label: 'New Tegomin · 墨线明朝',
+    stack:
+      '"New Tegomin", "Songti SC", "Noto Serif SC", "STSong", serif',
+  },
+  {
+    id: 'biz-udp-mincho',
+    label: 'BIZ UDP 明朝 · 印刷宋体',
+    stack:
+      '"BIZ UDPMincho", "Songti SC", "Noto Serif SC", "STSong", serif',
+  },
+  {
+    id: 'biz-udp-gothic',
+    label: 'BIZ UDP 哥特 · 印刷黑体',
+    stack:
+      '"BIZ UDPGothic", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+  },
+  {
+    id: 'kosugi',
+    label: 'Kosugi · 清爽黑体',
+    stack:
+      '"Kosugi", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+  },
+  {
     id: 'shippori-mincho-b1',
     label: 'Shippori Mincho · 明朝纸质',
     stack:

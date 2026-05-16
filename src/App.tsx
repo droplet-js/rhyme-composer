@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
+import { BookPreviewModal } from './components/BookPreviewModal'
 import { BookPageCanvas } from './components/BookPageCanvas'
 import { FONT_PRESETS, defaultFontPresetId } from './constants/childFonts'
 import { pagePreviewHeightPx } from './constants/paper'
@@ -49,6 +50,18 @@ function newPage(): SongPage {
     blocks: [],
     showPageNumber: false,
     pageNumberDisplay: '',
+  }
+}
+
+/** Deep copy page with new page id and new ids for every text block. */
+function cloneSongPage(source: SongPage): SongPage {
+  return {
+    id: crypto.randomUUID(),
+    pageName: source.pageName,
+    background: { ...source.background },
+    blocks: source.blocks.map((b) => ({ ...b, id: crypto.randomUUID() })),
+    showPageNumber: source.showPageNumber,
+    pageNumberDisplay: source.pageNumberDisplay,
   }
 }
 
@@ -122,6 +135,7 @@ type Action =
       patch: Partial<TextBlock>
     }
   | { type: 'addPage' }
+  | { type: 'duplicatePage'; index: number }
   | { type: 'removePage'; index: number }
   | { type: 'movePage'; from: number; to: number }
   | { type: 'select'; index: number }
@@ -200,6 +214,21 @@ function appReducer(state: AppState, action: Action): AppState {
         selectedIndex: pages.length - 1,
       }
     }
+    case 'duplicatePage': {
+      const i = action.index
+      const len = state.book.pages.length
+      if (i < 0 || i >= len) return state
+      const copy = cloneSongPage(state.book.pages[i])
+      const pages = [...state.book.pages]
+      pages.splice(i + 1, 0, copy)
+      let selectedIndex = state.selectedIndex
+      if (selectedIndex === i) {
+        selectedIndex = i + 1
+      } else if (selectedIndex > i) {
+        selectedIndex++
+      }
+      return { book: { ...state.book, pages }, selectedIndex }
+    }
     case 'removePage': {
       const i = action.index
       const filtered = state.book.pages.filter((_, idx) => idx !== i)
@@ -251,6 +280,7 @@ function App() {
     loadBookAppState,
   )
   const [exporting, setExporting] = useState(false)
+  const [bookPreviewOpen, setBookPreviewOpen] = useState(false)
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null)
   const [pairRefBlockId, setPairRefBlockId] = useState<string | null>(null)
   const pageRefs = useRef<Map<string, HTMLDivElement>>(new Map())
@@ -375,6 +405,14 @@ function App() {
           </label>
           <button
             type="button"
+            className="btn ghost"
+            onClick={() => setBookPreviewOpen(true)}
+            disabled={book.pages.length === 0}
+          >
+            书籍预览
+          </button>
+          <button
+            type="button"
             className="btn primary"
             onClick={handleExport}
             disabled={exporting || book.pages.length === 0}
@@ -441,6 +479,20 @@ function App() {
                   <span className="page-tab-num">{i + 1}</span>
                   <span className="page-tab-title">{sidebarPageTitle(p, i)}</span>
                 </button>
+                <button
+                  type="button"
+                  className="btn icon"
+                  title="复制本页（插入到下一页）"
+                  aria-label="复制本页"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    dispatch({ type: 'duplicatePage', index: i })
+                    setSelectedBlockId(null)
+                  }}
+                >
+                  ⧉
+                </button>
                 {book.pages.length > 1 && (
                   <button
                     type="button"
@@ -458,7 +510,8 @@ function App() {
             ))}
           </ol>
           <p className="sidebar-hint">
-            用 ↑↓ 调整页面顺序（导出 PDF 顺序同步变化）；在预览中拖拽文字排版。
+            用 ↑↓ 调整顺序；⧉ 复制当前页到下一页（背景与文字块一并复制）；导出 PDF
+            顺序与列表一致。
           </p>
         </aside>
 
@@ -937,6 +990,12 @@ function App() {
           />
         ))}
       </div>
+
+      <BookPreviewModal
+        open={bookPreviewOpen}
+        onClose={() => setBookPreviewOpen(false)}
+        book={book}
+      />
     </div>
   )
 }
